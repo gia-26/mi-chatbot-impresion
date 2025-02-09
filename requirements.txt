@@ -13,4 +13,6 @@ packaging==24.2
 requests==2.32.3
 urllib3==2.3.0
 Werkzeug==3.1.3
-epson-connect==1.0.0
+epson-connect
+twilio
+requests
