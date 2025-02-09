@@ -11,7 +11,6 @@ app = Flask(__name__)
 user_state = {}
 
 # --- Configuración del correo para enviar a Epson Connect ---
-# Configura tus credenciales de email (por ejemplo, una cuenta de Gmail)
 EMAIL_USER = "impresoracasaepsonconectar@gmail.com"          # Reemplaza con tu correo
 EMAIL_PASS = "mdgnxyxhouvfrate"                # Reemplaza con tu contraseña (o usa variables de entorno para mayor seguridad)
 EPSON_EMAIL = "jmi2421vq0j2w5@print.epsonconnect.com"  # La dirección de impresión asignada a tu impresora
@@ -28,9 +27,23 @@ def whatsapp():
             pdf_url = user_state[sender]["pending_pdf"]
             try:
                 r = requests.get(pdf_url)
-                filename = "documento.pdf"
-                with open(filename, "wb") as f:
-                    f.write(r.content)
+                # Verifica si la descarga fue exitosa
+                if r.status_code == 200:
+                    # Verifica si el archivo es un PDF
+                    if "application/pdf" not in r.headers["Content-Type"]:
+                        return twiml_response("El archivo descargado no es un PDF válido.")
+                    
+                    filename = "documento.pdf"
+                    with open(filename, "wb") as f:
+                        f.write(r.content)
+                    
+                    # Verifica que el archivo no esté vacío
+                    if os.path.getsize(filename) == 0:
+                        return twiml_response("El archivo PDF descargado está vacío.")
+                    
+                    print("PDF descargado correctamente.")
+                else:
+                    return twiml_response(f"Error al descargar el PDF, status code: {r.status_code}")
             except Exception as e:
                 print("Error al descargar el PDF:", e)
                 return twiml_response("Error al descargar el PDF. Inténtalo de nuevo.")
@@ -69,6 +82,11 @@ def twiml_response(message):
 
 def enviar_email_pdf(pdf_path):
     try:
+        # Verifica que el archivo no esté vacío antes de adjuntarlo
+        if os.path.getsize(pdf_path) == 0:
+            print("El archivo PDF está vacío.")
+            return False
+        
         # Configura el mensaje de email
         msg = MIMEMultipart()
         msg['Subject'] = "Impresión PDF"
@@ -77,7 +95,8 @@ def enviar_email_pdf(pdf_path):
 
         # Adjunta el PDF
         with open(pdf_path, "rb") as f:
-            part = MIMEApplication(f.read(), Name=os.path.basename(pdf_path))
+            content = f.read()
+            part = MIMEApplication(content, _subtype="pdf", Name=os.path.basename(pdf_path))
         part['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
         msg.attach(part)
 
