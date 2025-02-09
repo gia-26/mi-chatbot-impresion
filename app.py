@@ -21,6 +21,8 @@ def whatsapp():
     body = request.form.get("Body", "").strip().lower()
     num_media = int(request.form.get("NumMedia", 0))
     
+    print(f"Request received from: {sender}, body: {body}, num_media: {num_media}")
+
     # Si el usuario ya tiene un PDF pendiente y ahora responde:
     if sender in user_state and user_state[sender].get("pending_pdf"):
         if body == "si":
