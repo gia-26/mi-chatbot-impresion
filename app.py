@@ -42,14 +42,11 @@ def whatsapp():
                         return twiml_response("El archivo PDF descargado está vacío.")
                     
                     print("PDF descargado correctamente.")
-<<<<<<< HEAD
                     
                     # Verifica el contenido del archivo PDF
                     with open(filename, "rb") as f:
                         content = f.read()
                         print(f"Contenido del PDF (primeros 100 bytes): {content[:100]}")
-=======
->>>>>>> 029047e23eda343cee6f75a54664aae6b8aa5f82
                 else:
                     return twiml_response(f"Error al descargar el PDF, status code: {r.status_code}")
             except Exception as e:
