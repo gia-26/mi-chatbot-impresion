@@ -13,7 +13,7 @@ user_state = {}
 # --- Configuración del correo para enviar a Epson Connect ---
 # Configura tus credenciales de email (por ejemplo, una cuenta de Gmail)
 EMAIL_USER = "impresoracasaepsonconectar@gmail.com"          # Reemplaza con tu correo
-EMAIL_PASS = "impresoraCasaEpsonConectar123456789"                # Reemplaza con tu contraseña (o usa variables de entorno para mayor seguridad)
+EMAIL_PASS = "mdgn xyxh ouvf rate"                # Reemplaza con tu contraseña (o usa variables de entorno para mayor seguridad)
 EPSON_EMAIL = "jmi2421vq0j2w5@print.epsonconnect.com"  # La dirección de impresión asignada a tu impresora
 
 @app.route("/whatsapp", methods=["POST"])
