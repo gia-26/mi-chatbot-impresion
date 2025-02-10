@@ -105,16 +105,13 @@ def enviar_email_pdf(pdf_path):
         
         # Configura el mensaje de email
         msg = MIMEMultipart()
-        msg['Subject'] = "Impresión PDF"
         msg['From'] = EMAIL_USER
         msg['To'] = EPSON_EMAIL
+        msg['Subject'] = "Impresión PDF"
+        
+        # Adjunta el PDF directamente al mensaje sin añadir contenido adicional
+        msg.attach(MIMEApplication(open(pdf_path, 'rb').read(), _subtype='pdf', Name=os.path.basename(pdf_path)))
 
-        # Adjunta el PDF
-        with open(pdf_path, "rb") as f:
-            content = f.read()
-            part = MIMEApplication(content, _subtype="pdf", Name=os.path.basename(pdf_path))
-        part['Content-Disposition'] = f'attachment; filename="{os.path.basename(pdf_path)}"'
-        msg.attach(part)
 
         # Conecta al servidor SMTP (ejemplo con Gmail)
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
