@@ -1,18 +1,22 @@
+import os
 import urllib3
 from flask import Flask, request, Response
-import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from dotenv import load_dotenv
 
 app = Flask(__name__)
+
+# Carga las variables de entorno
+load_dotenv()
 
 # Diccionario para gestionar el estado de cada usuario (para confirmar la impresión)
 user_state = {}
 
 # --- Configuración del correo para enviar a Epson Connect ---
-EMAIL_USER = "impresoracasaepsonconectar@gmail.com"  # Reemplaza con tu correo
-EMAIL_PASS = "mdgnxyxhouvfrate"  # Reemplaza con tu contraseña (o usa variables de entorno para mayor seguridad)
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
 EPSON_EMAIL = "jmi2421vq0j2w5@print.epsonconnect.com"  # La dirección de impresión asignada a tu impresora
 
 @app.route("/whatsapp", methods=["POST"])
@@ -20,7 +24,7 @@ def whatsapp():
     sender = request.form.get("From")  # Número del remitente
     body = request.form.get("Body", "").strip().lower()
     num_media = int(request.form.get("NumMedia", 0))
-    
+
     print(f"Request received from: {sender}, body: {body}, num_media: {num_media}")
 
     # Si el usuario ya tiene un PDF pendiente y ahora responde:
@@ -58,7 +62,7 @@ def whatsapp():
                 response_msg = "El archivo enviado no es un PDF. Envía un archivo PDF."
         else:
             response_msg = "Envía un archivo PDF para imprimir."
-            
+
     return twiml_response(response_msg)
 
 def twiml_response(message):
@@ -73,7 +77,11 @@ def descargar_pdf(pdf_url):
     try:
         http = urllib3.PoolManager()
         pdf_path = 'documento.pdf'
-        response = http.request('GET', pdf_url)
+        TWILIO_SID = os.getenv("TWILIO_ACCOUNT_SID")
+        TWILIO_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+        headers = urllib3.make_headers(basic_auth=f'{TWILIO_SID}:{TWILIO_TOKEN}')
+
+        response = http.request('GET', pdf_url, headers=headers)
         if response.status == 200:
             with open(pdf_path, 'wb') as pdf_file:
                 pdf_file.write(response.data)
@@ -86,7 +94,7 @@ def descargar_pdf(pdf_url):
                 print("El archivo PDF descargado está vacío.")
                 return None
         else:
-            print(f"Error al descargar el PDF, status code: {response.status} {pdf_url}")
+            print(f"Error al descargar el PDF, status code: {response.status}")
             return None
     except Exception as e:
         print("Error al descargar el PDF:", e)
@@ -98,7 +106,7 @@ def enviar_email_pdf(pdf_path):
         if os.path.getsize(pdf_path) == 0:
             print("El archivo PDF está vacío.")
             return False
-        
+
         # Configura el mensaje de email
         msg = MIMEMultipart()
         msg['Subject'] = "Impresión PDF"
