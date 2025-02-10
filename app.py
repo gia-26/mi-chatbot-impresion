@@ -1,9 +1,8 @@
+import os
 import urllib3
 from flask import Flask, request, Response
-import os
 import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
+from email.message import EmailMessage
 
 app = Flask(__name__)
 
@@ -20,7 +19,7 @@ def whatsapp():
     sender = request.form.get("From")  # Número del remitente
     body = request.form.get("Body", "").strip().lower()
     num_media = int(request.form.get("NumMedia", 0))
-    
+
     print(f"Request received from: {sender}, body: {body}, num_media: {num_media}")
 
     # Si el usuario ya tiene un PDF pendiente y ahora responde:
@@ -58,7 +57,7 @@ def whatsapp():
                 response_msg = "El archivo enviado no es un PDF. Envía un archivo PDF."
         else:
             response_msg = "Envía un archivo PDF para imprimir."
-            
+
     return twiml_response(response_msg)
 
 def twiml_response(message):
@@ -76,7 +75,7 @@ def descargar_pdf(pdf_url):
         TWILIO_SID = 'AC5f45411a799b46ee424835624e325da0'
         TWILIO_TOKEN = '75250869e1aa38441c223a9a903f82be'
         headers = urllib3.make_headers(basic_auth=f'{TWILIO_SID}:{TWILIO_TOKEN}')
-        
+
         response = http.request('GET', pdf_url, headers=headers)
         if response.status == 200:
             with open(pdf_path, 'wb') as pdf_file:
@@ -102,21 +101,21 @@ def enviar_email_pdf(pdf_path):
         if os.path.getsize(pdf_path) == 0:
             print("El archivo PDF está vacío.")
             return False
-        
+
         # Configura el mensaje de email
-        msg = MIMEMultipart()
+        msg = EmailMessage()
         msg['From'] = EMAIL_USER
         msg['To'] = EPSON_EMAIL
         msg['Subject'] = "Impresión PDF"
         
         # Adjunta el PDF directamente al mensaje sin añadir contenido adicional
-        msg.attach(MIMEApplication(open(pdf_path, 'rb').read(), _subtype='pdf', Name=os.path.basename(pdf_path)))
-
+        with open(pdf_path, 'rb') as f:
+            msg.add_attachment(f.read(), maintype='application', subtype='pdf', filename=os.path.basename(pdf_path))
 
         # Conecta al servidor SMTP (ejemplo con Gmail)
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.login(EMAIL_USER, EMAIL_PASS)
-        server.sendmail(EMAIL_USER, EPSON_EMAIL, msg.as_string())
+        server.send_message(msg)
         server.quit()
         return True
     except Exception as e:
