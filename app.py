@@ -86,7 +86,7 @@ def descargar_pdf(pdf_url):
                 print("El archivo PDF descargado está vacío.")
                 return None
         else:
-            print(f"Error al descargar el PDF, status code: {response.status}")
+            print(f"Error al descargar el PDF, status code: {response.status} {pdf_url}")
             return None
     except Exception as e:
         print("Error al descargar el PDF:", e)
